@@ -62,3 +62,6 @@ packer_virtualbox-ovf_virtualbox.box
 **/target/*
 
 .credentials
+lesson1/stage1/.idea/
+lesson1/stage1/udacity-storm-lesson1_stage1.iml
+
