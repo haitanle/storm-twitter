@@ -24,6 +24,7 @@ def show_basic():
   #Basic d3 view = basic.html and app.js
     return render_template("basic.html")
 
+#back in processing of stream
 @app.route('/stream')
 def stream():
     return Response(event_stream(), mimetype="text/event-stream")
