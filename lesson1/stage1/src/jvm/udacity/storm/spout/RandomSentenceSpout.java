@@ -26,11 +26,11 @@ public class RandomSentenceSpout extends BaseRichSpout {
   public void nextTuple() {
     Utils.sleep(100);
     String[] sentences = new String[]{
-      "Well, I’ve been afraid of changing",
-      "I decided long ago, never to walk in anyone’s shadows",
-      "Some of it’s magic",
-      "Some will win, some will lose",
-      "There’s still time to change the road you’re on"
+      "Hello darkness, my old friend",
+      "I change shape",
+      "Hello, is this you?",
+      "All my life, I pray for someone",
+      "Hey Jude, don't be afraid"
       };
     String sentence = sentences[_rand.nextInt(sentences.length)];
     _collector.emit(new Values(sentence));
