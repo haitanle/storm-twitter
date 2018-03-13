@@ -91,6 +91,37 @@ public class SentenceWordCountTopology {
   }
 
   /**
+   * A bolt that parse sentences into words it receive
+   */
+  static class SplitSentenceBolt extends BaseRichBolt{
+
+    private OutputCollector collector;
+
+    @Override
+    public void prepare(Map stormConf, TopologyContext context, OutputCollector outputCollector) {
+
+      collector = outputCollector;
+    }
+
+    @Override
+    public void execute(Tuple tuple) {
+
+      String[] words = tuple.getString(0).split("[ .,?!]+");
+
+      for (String word: words){
+        collector.emit(new Values(word));
+      }
+    }
+
+    @Override
+    public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
+
+      //Declare output Value "sentence-word"
+      outputFieldsDeclarer.declare(new Fields("sentence-word"));
+    }
+  }
+
+  /**
    * A bolt that counts the words that it receives
    */
   static class CountBolt extends BaseRichBolt {
@@ -206,10 +237,12 @@ public class SentenceWordCountTopology {
     TopologyBuilder builder = new TopologyBuilder();
 
     // attach the word spout to the topology - parallelism of 5
-    builder.setSpout("sentence-spout", new RandomSentenceSpout(), 1);
+    builder.setSpout("sentence-spout", new RandomSentenceSpout(), 3);
+
+    builder.setBolt("split-sentence", new SplitSentenceBolt(), 15).shuffleGrouping("sentence-spout");
 
     // attach the count bolt using fields grouping - parallelism of 15
-    builder.setBolt("count-bolt", new CountBolt(), 15).fieldsGrouping("sentence-spout", new Fields("sentence"));
+    builder.setBolt("count-bolt", new CountBolt(), 15).fieldsGrouping("split-sentence", new Fields("sentence-word"));
 
     // attach the report bolt using global grouping - parallelism of 1
     //***************************************************
@@ -247,7 +280,7 @@ public class SentenceWordCountTopology {
       LocalCluster cluster = new LocalCluster();
 
       // submit the topology to the local cluster
-      cluster.submitTopology("sentence-count", conf, builder.createTopology());
+      cluster.submitTopology("sentenceWord-count", conf, builder.createTopology());
 
       // let the topology run for 30 seconds. note topologies never terminate!
       Thread.sleep(30000);
