@@ -10,6 +10,7 @@ import backtype.storm.utils.Utils;
 import udacity.storm.bolt.CountBolt;
 import udacity.storm.bolt.ParseTweetBolt;
 import udacity.storm.bolt.ReportBolt;
+import udacity.storm.bolt.RollingCountBolt;
 import udacity.storm.spout.TweetSpout;
 
 /**
@@ -49,9 +50,9 @@ public class TweetTopology {
     // Part 1: // attach the parse tweet bolt, parallelism of 10 (what grouping is needed?)
     builder.setBolt("parse-tweet-bolt", new ParseTweetBolt(),10).shuffleGrouping("tweet-spout");
     // Part 2: // attach the count bolt, parallelism of 15 (what grouping is needed?)
-    builder.setBolt("count-bolt", new CountBolt(), 15).fieldsGrouping("parse-tweet-bolt",new Fields("tweet-word"));
+    builder.setBolt("rolling-count-bolt", new RollingCountBolt(40,20), 15).fieldsGrouping("parse-tweet-bolt",new Fields("tweet-word"));
     // Part 3: attach the report bolt, parallelism of 1 (what grouping is needed?)
-    builder.setBolt("report-bolt", new ReportBolt(),1).globalGrouping("count-bolt");
+    builder.setBolt("report-bolt", new ReportBolt(),1).globalGrouping("rolling-count-bolt");
     // Submit and run the topology.
 
 
