@@ -17,8 +17,10 @@ import storm
 
 class SplitSentenceBolt(storm.BasicBolt):
     def process(self, tup):
-        words = tup.values[0].split(" ")
-        for word in words:
-            storm.emit([word])
+        if tup.values[0]:
+            words = tup.values[0].split(" ")
+            if words:
+                for word in words:
+                    storm.emit([word])
 
 SplitSentenceBolt().run()

@@ -10,7 +10,9 @@ import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 import twitter4j.*;
 import twitter4j.conf.ConfigurationBuilder;
+import udacity.storm.bolt.URLBolt;
 
+import java.io.Console;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -41,7 +43,15 @@ public class TweetSpout extends BaseRichSpout{
         public void onStatus(Status status)
         {
           // add the tweet into the queue buffer
-          queue.offer(status.getText());
+          URLEntity[] urls = status.getURLEntities();
+          try{
+            if (urls.length!=0) {
+              String url = urls[0].getURL();
+              queue.offer(url);
+            }
+          }catch (Exception e){
+            System.err.println("Unable to get URL");
+          }
         }
 
         @Override
