@@ -13,7 +13,9 @@ import udacity.storm.spout.TweetSpout;
 /**
  * This is a basic example of a Storm topology.
  */
-public class TweetTopology {
+public class TopNTweetTopology {
+
+  private static int TOPN = 10;
 
 
   public static void main(String[] args) throws Exception
@@ -32,8 +34,8 @@ public class TweetTopology {
 
     // now create the tweet spout with the credentials
     TweetSpout tweetSpout = new TweetSpout(
-            "hIPKnoQHqS31vtvRRNRI4MiVZ",
-            "Ej7a3S4QcoVhdI6FyXoMf1cm2sZlqxZd5d1qHsucLepHjipOYh",
+            "OejzWScWmWElRzpMJG6I2hT4g",
+            "uCrLW4c0muj2I7jfel4HscsH6AzAcTrFWUmOycQIGgKhwWycOB",
             "172153182-ec2vJOZYqewW1fFZTHshmXIq5QLRZ2tx4QLRcOhg",
             "SXLwhjJjSJ8nEVrAtL5OONxNDrUOoVM1meSfLDZSv8fgL"
     );
@@ -45,14 +47,19 @@ public class TweetTopology {
     //*********************************************************************
     // Complete the Topology.
     // Part 1: // attach the parse tweet bolt, parallelism of 10 (what grouping is needed?)
-    builder.setBolt("python-url-bolt", new URLBolt(),10).shuffleGrouping("tweet-spout");
 
-    builder.setBolt("python-split-sentence", new SplitSentence(),10).shuffleGrouping("python-url-bolt");
+    builder.setBolt("parse-tweet-bolt", new ParseTweetBolt(),10).shuffleGrouping("tweet-spout");
 
     // Part 2: // attach the count bolt, parallelism of 15 (what grouping is needed?)
-    builder.setBolt("rolling-count-bolt", new RollingCountBolt(40,20), 15).fieldsGrouping("python-split-sentence",new Fields("word"));
+    builder.setBolt("count-bolt", new CountBolt(), 15).fieldsGrouping("parse-tweet-bolt",new Fields("tweet-word"));
     // Part 3: attach the report bolt, parallelism of 1 (what grouping is needed?)
-    builder.setBolt("report-bolt", new ReportBolt(),1).globalGrouping("rolling-count-bolt");
+
+    //TODO: beef up parallelism and use fieldsGrouping
+    builder.setBolt("intermediate-ranking-bolt",new IntermediateRankingsBolt(TOPN),4).fieldsGrouping("count-bolt",new Fields("word"));
+
+    builder.setBolt("total-ranking-bolt", new TotalRankingsBolt(TOPN)).globalGrouping("intermediate-ranking-bolt");
+
+    builder.setBolt("report-bolt", new ReportBolt(),1).globalGrouping("total-ranking-bolt");
     // Submit and run the topology.
 
 
@@ -89,7 +96,7 @@ public class TweetTopology {
       cluster.submitTopology("tweet-word-count", conf, builder.createTopology());
 
       // let the topology run for 30 seconds. note topologies never terminate!
-      Utils.sleep(1000*30000);
+      Utils.sleep(300000);
 
       // now kill the topology
       cluster.killTopology("tweet-word-count");

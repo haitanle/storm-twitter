@@ -7,6 +7,8 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import com.lambdaworks.redis.RedisClient;
 import com.lambdaworks.redis.RedisConnection;
+import udacity.storm.tools.Rankable;
+import udacity.storm.tools.Rankings;
 
 import java.util.Map;
 
@@ -31,16 +33,26 @@ public class ReportBolt extends BaseRichBolt{
       }
 
       @Override
-      public void execute(Tuple tuple)
-      {
-        // access the first column 'word'
-        String word = tuple.getStringByField("word");
+      public void execute(Tuple tuple) {
+          // access the first column 'word'
+          Rankings rankList = (Rankings) tuple.getValue(0);
 
-        // access the second column 'count'
-        Integer count = tuple.getIntegerByField("count");
+          for (Rankable r : rankList.getRankings()) {
+              if (r != null) {
+                  String word = r.getObject().toString();
+                  long count = r.getCount();
+                  redis.publish("WordCountTopology", word + "|" + Long.toString(count));
+              }
 
-        // publish the word count to redis using word as the key
-        redis.publish("WordCountTopology", word + "|" + Long.toString(count));
+              // String word = tuple.getStringByField("word");
+
+              // access the second column 'count'
+              // Long count = tuple.getLongByField("count");
+              // redis.publish("WordCountTopology", word + "|" + Long.toString(count));
+
+              // publish the word count to redis using word as the key
+
+          }
       }
 
       public void declareOutputFields(OutputFieldsDeclarer declarer)

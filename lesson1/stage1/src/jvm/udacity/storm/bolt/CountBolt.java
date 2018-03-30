@@ -57,7 +57,7 @@ public class CountBolt extends BaseRichBolt{
         }
 
         // emit the word and count
-        collector.emit(new Values(word, countMap.get(word)));
+        collector.emit(new Values(word, Long.valueOf(countMap.get(word))));
       }
 
       @Override
