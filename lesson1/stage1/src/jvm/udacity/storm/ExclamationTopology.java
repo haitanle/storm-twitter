@@ -13,6 +13,9 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import udacity.storm.bolt.ReportBolt;
+import udacity.storm.spout.MyLikesSpout;
+import udacity.storm.spout.MyNamesSpout;
 
 import java.util.Map;
 
@@ -79,13 +82,19 @@ public class ExclamationTopology {
     TopologyBuilder builder = new TopologyBuilder();
 
     // attach the word spout to the topology - parallelism of 10
-    builder.setSpout("word", new TestWordSpout(), 10);
+    builder.setSpout("my-likes-spout", new MyLikesSpout(), 10);
+
+    builder.setSpout("my-names-spout", new MyNamesSpout(), 10);
 
     // attach the exclamation bolt to the topology - parallelism of 3
-    builder.setBolt("exclaim1", new ExclamationBolt(), 3).shuffleGrouping("word");
+    builder.setBolt("exclaim1", new ExclamationBolt(), 3)
+            .shuffleGrouping("my-likes-spout")
+            .shuffleGrouping("my-names-spout");
 
     // attach another exclamation bolt to the topology - parallelism of 2
-    builder.setBolt("exclaim2", new ExclamationBolt(), 2).shuffleGrouping("exclaim1");
+    //builder.setBolt("exclaim2", new ExclamationBolt(), 2).shuffleGrouping("exclaim1");
+
+    builder.setBolt("report-bolt", new ReportBolt(),1).globalGrouping("exclaim1");
 
     // create the default config object
     Config conf = new Config();
