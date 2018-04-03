@@ -36,7 +36,6 @@ public class ReportBolt extends BaseRichBolt{
       public void execute(Tuple tuple) {
           // access the first column 'word'
 
-          String word = tuple.getStringByField("exclamated-word");
           String word = (String) tuple.getValue(0);
 
           //access the second column 'count'
