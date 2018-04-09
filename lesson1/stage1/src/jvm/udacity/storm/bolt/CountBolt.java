@@ -59,7 +59,7 @@ public class CountBolt extends BaseRichBolt{
 
 
         // emit the word and count
-        collector.emit(new Values(word, Long.valueOf(countMap.get(word))));
+        collector.emit(new Values(word, countMap.get(word)));
       }
 
       @Override
@@ -71,35 +71,5 @@ public class CountBolt extends BaseRichBolt{
         // declare the first column 'word', second column 'count'
         outputFieldsDeclarer.declare(new Fields("word","count"));
       }
-
-      private LinkedHashMap<String, Integer> sortHashMap(HashMap<String, Integer> unsortedMap){
-
-          Comparator<Map.Entry<String,Integer>> valueComparator = new Comparator<Map.Entry<String, Integer>>() {
-            @Override
-            public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
-              Integer v1 = o1.getValue();
-              Integer v2 = o2.getValue();
-              return v1.compareTo(v2);
-            }
-          };
-
-          //Get each entry of the hashMap
-          Set<Map.Entry<String, Integer>> entries = unsortedMap.entrySet();
-
-          // Sort method needs a List, so let's first convert Set to List in Java
-          List<Map.Entry<String, Integer>> listOfEntries = new ArrayList<Map.Entry<String, Integer>>(entries);
-
-          //Perform storing
-          Collections.sort(listOfEntries,valueComparator);
-
-        // copying entries from List back to Map
-          LinkedHashMap<String, Integer> sortedHashTags = new LinkedHashMap<String, Integer>();
-
-          for (Map.Entry<String, Integer> entry: listOfEntries){
-            sortedHashTags.put(entry.getKey(),entry.getValue());
-          }
-          return sortedHashTags;
-      }
-
 
 }

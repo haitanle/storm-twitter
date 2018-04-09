@@ -10,6 +10,8 @@ import backtype.storm.utils.Utils;
 import udacity.storm.bolt.*;
 import udacity.storm.spout.TweetSpout;
 
+import java.io.File;
+
 /**
  * This is a basic example of a Storm topology.
  */
@@ -21,6 +23,13 @@ public class TopTweetTopology {
     public static void main(String[] args) throws Exception
     {
         // create the topology
+        File file = new File("allHashTags.txt");
+        if (file.exists() && file.isFile())
+        {
+            file.delete();
+        }
+        file.createNewFile();
+
         TopologyBuilder builder = new TopologyBuilder();
 
         /*
@@ -54,16 +63,11 @@ public class TopTweetTopology {
         builder.setBolt("count-bolt", new CountBolt(), 15).fieldsGrouping("parse-tweet-bolt",new Fields("tweet-word"));
         // Part 3: attach the report bolt, parallelism of 1 (what grouping is needed?)
 
-        //TODO: beef up parallelism and use fieldsGrouping
-        builder.setBolt("intermediate-ranking-bolt",new IntermediateRankingsBolt(TOPN),4).fieldsGrouping("count-bolt",new Fields("word"));
-
-        builder.setBolt("total-ranking-bolt", new TotalRankingsBolt(TOPN)).globalGrouping("intermediate-ranking-bolt");
-
         builder.setBolt("top-hashtag-bolt", new TopHashTagBolt(),1)
-                .globalGrouping("total-ranking-bolt")
+                .globalGrouping("count-bolt")
                 .globalGrouping("tweet-spout");
 
-        builder.setBolt("report-bolt", new ReportBolt(),1).globalGrouping("total-ranking-bolt");
+        builder.setBolt("report-bolt", new ReportBolt(),1).globalGrouping("top-hashtag-bolt");
         // Submit and run the topology.
 
 
